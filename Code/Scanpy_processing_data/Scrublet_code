@@ -1,0 +1,14 @@
+#Add metadata and run Scrublet
+python
+import numpy as np
+import pandas as pd
+import scanpy as sc
+from anndata import read_h5ad
+
+adata=read_h5ad('./Raw_data.h5ad')
+anno = pd.read_csv('./Metadata.csv',header=0,index_col=0)
+adata.obs = anno
+import scrublet as scr
+scrub=scr.Scrublet(adata.raw.X,expected_doublet_rate=0.045)
+adata.obs['doublet_scores'], adata.obs['predicted_doublets'] = scrub.scrub_doublets(n_prin_comps=20)
+adata.write('Raw_data_scrub.h5ad')
