@@ -1,0 +1,57 @@
+Variable,Description
+amyloid  ,overall amyloid level
+arteriol_scler  ,Arteriolosclerosis
+bradysc_lv ,Bradykinesia score
+caa_4gp  ,Cerebral amyloid angiopathy
+cancer_bl ,Cancer at baseline
+chd_cogact_freq ,Cognitive activity - childhood
+ci_num2_gct  ,Gross chronic infarcts
+ci_num2_gtt  ,Gross infarcts
+ci_num2_mct  ,Chronic microinfarcts
+ci_num2_mtt  ,Microinfarcts
+cogdx_stroke ,Clinical diagnosis of stroke
+cogn_ep_lv ,Episodic memory
+cogn_global_lv ,Global cognitive function
+cogn_po_lv ,Perceptual orientation
+cogn_ps_lv ,Perceptual speed
+cogn_se_lv ,Semantic memory
+cogn_wo_lv ,Working memory
+cognep_random_slope ,rate of change of episodic memory
+cogng_random_slope ,rate of change of global cognitive function
+cognpo_random_slope ,rate of change of perceptual orientation
+cognps_random_slope ,rate of change of perceptual speed
+cognse_random_slope ,rate of change of semantic memory
+cognwo_random_slope ,rate of change of working memory
+cvda_4gp2  ,Cerebral atherosclerosis
+diabetes_sr_rx_bl ,Diabetes
+dlbdx  ,Lewy Body disease
+gaitsc_lv ,Gait score
+gpath ,Global AD pathology
+gpath_3neocort  ,global measure of neocortical AD pathology
+gpath_CDR_score  ,Global AD pathology CDR score
+gpath_CR_score  ,Global AD pathology CR score
+headinjrloc_bl ,Head injury
+heart_bl ,Heart
+hypertension_bl ,Hypertension
+lifetime_cogact_freq_bl ,Cognitive activity - lifetime (total)
+ma_adult_cogact_freq ,Cognitive activity - middle age
+msex ,Sex
+nft  ,Neurofibrillary tangle burden
+nft_CDR_score  ,Neurofibrillary tangle burden CDR score
+nft_CR_score  ,Neurofibrillary tangle burden CR score
+parksc_lv ,Parkinsonian summary score
+phys5itemsum_bl ,Physical activity baseline
+phys5itemsum_lv ,Physical activity last valid
+plaq_d  ,Diffuse plaque burden
+plaq_n  ,Neuritic plaque burden
+plaq_n_CDR_score  ,Neuritic plaque burden CDR score
+plaq_n_CR_score  ,Neuritic plaque burden CR score
+soc_net_bl ,Social network
+social_isolation_avg ,Social Isolation score - average
+social_isolation_lv ,Social Isolation score - last valid
+stroke_bl ,Stroke
+tangles  ,Tangle density
+tangles_CDR_score  ,Tangle density CDR score
+tangles_CR_score  ,Tangle density CR score
+tdp_st4  ,TDP-43 stage
+ya_adult_cogact_freq ,Cognitive activity - young adult

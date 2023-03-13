@@ -1,0 +1,34 @@
+library(Seurat)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+
+pbmc <- readRDS(file = "Ex_raw_highly_variable_mscores_integrated2_adjusted_umap.rds")
+Idents(pbmc)<-"cell_type_high_resolution"
+DefaultAssay(pbmc)<-"RNA"
+reference=pbmc
+reference <- NormalizeData(reference)
+reference <- FindVariableFeatures(reference, selection.method = "vst", nfeatures = 2000)
+reference <- ScaleData(reference)
+reference <- RunPCA(reference)
+
+pbmc <- readRDS(file = "Ex_raw_highly_variable_sct_5000_leiden_mscores.rds")
+DefaultAssay(pbmc)<-"RNA"
+
+anchors <- FindTransferAnchors(
+  reference = reference,
+  query = pbmc,
+  normalization.method = "LogNormalize",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+
+pbmc <- TransferData(
+  anchorset = anchors,
+  reference = reference,
+  query = pbmc,
+  refdata = list(
+    celltype = "cell_type_high_resolution")
+)
+
+saveRDS(pbmc,file="Ex_raw_highly_variable_sct_5000_leiden_mscores_predicted.rds")

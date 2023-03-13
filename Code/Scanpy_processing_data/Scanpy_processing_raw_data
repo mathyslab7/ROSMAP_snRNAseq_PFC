@@ -1,0 +1,23 @@
+#Scanpy processing raw data
+python
+import numpy as np
+import pandas as pd
+import scanpy as sc
+from anndata import read_h5ad
+adata = read_h5ad('./PFC_raw.h5ad')
+adata.raw = adata
+adata
+#AnnData object with n_obs × n_vars = 2663736 × 33538
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+adata = adata[:, adata.var.highly_variable]
+sc.pp.regress_out(adata, ['n_counts'])
+sc.pp.scale(adata, max_value=10)
+sc.tl.pca(adata, svd_solver='arpack')
+sc.pp.neighbors(adata, n_neighbors=100, n_pcs=20)
+sc.tl.leiden(adata,resolution=0.04,n_iterations=10)
+sc.pl.umap(adata,color=['leiden'],palette=sc.pl.palettes.default_20,save='_PFC_res004.pdf')
+markers =['SYT1','SLC17A7','GAD2','PLP1','AQP4','CSF1R','VCAN','CLDN5','PDGFRB']
+sc.pl.dotplot(adata, markers, groupby='leiden',dendrogram=True,standard_scale='var',save='_PFC_res004.pdf')
+adata.write('PFC_Results_res004.h5ad')

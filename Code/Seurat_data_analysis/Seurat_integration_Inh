@@ -1,0 +1,224 @@
+adata <- ReadH5AD(file = "In_raw.h5ad")
+pbmc <- CreateSeuratObject(counts = GetAssayData(object = adata, slot = 'counts'), project = "pbmc3k", min.cells = 0, min.features = 0)
+pbmc=AddMetaData(pbmc,adata@meta.data)
+rm(adata)
+library(patchwork)
+pbmc.list <- SplitObject(pbmc, split.by = "batch.annotation")
+for (i in names(pbmc.list)) {
+   pbmc.list[[i]] <- SCTransform(pbmc.list[[i]], verbose = FALSE,variable.features.n=3000)
+}
+pbmc.features <- SelectIntegrationFeatures(object.list = pbmc.list, nfeatures = 3000)
+pbmc.list <- PrepSCTIntegration(object.list = pbmc.list, anchor.features = pbmc.features)
+options(future.globals.maxSize = 150000 * 1024^2)
+rm(pbmc)
+k.filter <- min(200, min(sapply(pbmc.list, ncol)))
+pbmc.anchors <- FindIntegrationAnchors(object.list = pbmc.list, normalization.method = "SCT",anchor.features = pbmc.features,reference = c(2,3,4,5),k.filter = k.filter,verbose = FALSE)
+pbmc.integrated <- IntegrateData(anchorset = pbmc.anchors, normalization.method = "SCT")
+pbmc.integrated <- RunPCA(object = pbmc.integrated, verbose = FALSE)
+pbmc.integrated <- RunUMAP(object = pbmc.integrated, dims = 1:50,n.neighbors = 30,min.dist=0.1)
+pbmc.integrated <- FindNeighbors(pbmc.integrated, dims = 1:50, verbose = FALSE)
+pbmc.integrated <- FindClusters(pbmc.integrated, verbose = FALSE,resolution=0.5,algorithm=4,weights=T,method='igraph')
+saveRDS(pbmc.integrated,file="In_integrated_batch_3000.rds")
+
+
+########################################################################################
+#Add module scores
+
+pbmc <- readRDS(file = "In_integrated_batch_3000.rds")
+DefaultAssay(pbmc)<-"RNA"
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+Marker_genes_full=read.csv("Marker_genes_GABAergic_subclass_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+
+Marker_genes_full=read.csv("Marker_genes_LAMP5_cell_type_alias_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+
+
+Marker_genes_full=read.csv("Marker_genes_PAX6_cell_type_alias_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+
+
+Marker_genes_full=read.csv("Marker_genes_PVALB_cell_type_alias_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+
+Marker_genes_full=read.csv("Marker_genes_SST_cell_type_alias_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+
+
+Marker_genes_full=read.csv("Marker_genes_VIP_cell_type_alias_label",header=TRUE)
+Marker_genes_full_significant=subset(Marker_genes_full,p_val_adj < 0.05)
+Marker_genes=Marker_genes_full_significant[,7:8]
+Marker_genes[] <- lapply(Marker_genes, as.character)
+Marker_genes_split=split(Marker_genes, Marker_genes$cluster)
+Marker_genes_list <- list()
+for (i in 1:length(Marker_genes_split)) {
+  name=names(Marker_genes_split)[i]
+  Marker_genes_list[[i]]<-Marker_genes_split[[i]]$gene
+  names(Marker_genes_list)[i]<-name
+}
+all_genes=rownames(pbmc)
+Marker_genes_list_pruned <- list()
+for (i in 1:length(Marker_genes_list)) {
+  name=names(Marker_genes_list)[i]
+  Marker_genes_list_pruned[[i]]<-intersect(Marker_genes_list[[i]],all_genes)
+  names(Marker_genes_list_pruned)[i]<-name
+}
+for (i in 1:length(Marker_genes_list_pruned)) {
+  name=names(Marker_genes_list_pruned)[i]
+  genes.for.scoring <- list(c(Marker_genes_list_pruned[[i]]))
+  pbmc <- AddModuleScore(object = pbmc, features = genes.for.scoring, name = name)
+}
+saveRDS(pbmc,file="In_integrated_batch_3000_module_scores")
+
+########################################################################################
+#Label transfer
+
+library(Seurat)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+pbmc <- readRDS(file = "In_raw_mscores_integrated2.rds")
+addition=read.table("Inh_Metadata_addition_cell_type_highres.txt",header=TRUE,row.names=1,sep="\t")
+pbmc=AddMetaData(pbmc,addition)
+Idents(pbmc)<-"cell_type_high_resolution"
+DefaultAssay(pbmc)<-"RNA"
+reference=pbmc
+reference <- NormalizeData(reference)
+reference <- FindVariableFeatures(reference, selection.method = "vst", nfeatures = 2000)
+reference <- ScaleData(reference)
+reference <- RunPCA(reference)
+
+pbmc <- readRDS(file = "In_integrated_batch_3000_module_scores")
+DefaultAssay(pbmc)<-"RNA"
+
+anchors <- FindTransferAnchors(
+  reference = reference,
+  query = pbmc,
+  normalization.method = "LogNormalize",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+
+pbmc <- TransferData(
+  anchorset = anchors,
+  reference = reference,
+  query = pbmc,
+  refdata = list(
+    celltype = "cell_type_high_resolution")
+)
+
+saveRDS(pbmc,file="In_integrated_batch_3000_module_scores_predicted.rds")
+
+########################################################################################
+library(Seurat)
+pbmc <- readRDS(file = "In_integrated_batch_3000_module_scores_predicted.rds")
+DimPlot(pbmc)
+addition=read.table("In_integrated_batch_3000_module_scores_predicted_addition_scanpy_updated.txt",header=TRUE,row.names=1,sep="\t")
+pbmc=AddMetaData(pbmc,addition)
+Idents(pbmc)<-"cell_type_high_resolution"
+saveRDS(pbmc,file="In_integrated_batch_3000_module_scores_predicted_final.rds")

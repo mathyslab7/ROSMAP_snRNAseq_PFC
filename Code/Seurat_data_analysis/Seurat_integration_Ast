@@ -1,0 +1,92 @@
+library(Seurat)
+adata <- ReadH5AD(file = "Ast_raw.h5ad")
+pbmc <- CreateSeuratObject(counts = GetAssayData(object = adata, slot = 'counts'), project = "pbmc3k", min.cells = 0, min.features = 0)
+pbmc=AddMetaData(pbmc,adata@meta.data)
+rm(adata)
+saveRDS(pbmc,file="Ast_raw.rds")
+
+########################################################################################
+library(Seurat)
+pbmc <- readRDS(file = "Ast_raw.rds")
+pbmc.list <- SplitObject(pbmc, split.by = "batch.annotation")
+ for (i in names(pbmc.list)) {
+    pbmc.list[[i]] <- SCTransform(pbmc.list[[i]], verbose = FALSE,variable.features.n=5000)
+ }
+pbmc.features <- SelectIntegrationFeatures(object.list = pbmc.list, nfeatures = 5000)
+pbmc.list <- PrepSCTIntegration(object.list = pbmc.list, anchor.features = pbmc.features)
+options(future.globals.maxSize = 50000 * 1024^2)
+rm(pbmc)
+k.filter <- min(200, min(sapply(pbmc.list, ncol)))
+pbmc.anchors <- FindIntegrationAnchors(object.list = pbmc.list, normalization.method = "SCT",anchor.features = pbmc.features,reference = c(2,3,4,5),k.filter = k.filter,verbose = FALSE)
+pbmc.integrated <- IntegrateData(anchorset = pbmc.anchors, normalization.method = "SCT")
+pbmc.integrated <- RunPCA(object = pbmc.integrated, verbose = FALSE)
+pbmc.integrated <- RunUMAP(object = pbmc.integrated, dims = 1:10,n.neighbors = 100,min.dist=0.1)
+pbmc.integrated <- FindNeighbors(pbmc.integrated, dims = 1:10, verbose = FALSE)
+saveRDS(pbmc.integrated,file="Ast_integrated_batch_5000.rds")
+
+########################################################################################
+library(Seurat)
+pbmc.integrated <- readRDS(file = "Ast_integrated_batch_5000.rds")
+pbmc.integrated <- RunUMAP(object = pbmc.integrated, dims = 1:10,n.neighbors = 100)
+pbmc.integrated <- FindClusters(pbmc.integrated, verbose = FALSE,resolution=0.08,algorithm=4,weights=T,method='igraph')
+saveRDS(pbmc.integrated,file="Ast_integrated_batch_5000_leiden.rds")
+
+########################################################################################
+#Determine marker genes
+library(Seurat)
+pbmc <- readRDS(file = "Ast_integrated_batch_5000_leiden.rds")
+DimPlot(pbmc,label=TRUE)
+DefaultAssay(pbmc)<-"RNA"
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc.markers <- FindAllMarkers(pbmc, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25,max.cells.per.ident = 2000)
+write.csv(pbmc.markers,file="Ast_markers_res008")
+
+########################################################################################
+#Label transfer
+library(Seurat)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+
+pbmc=readRDS("Ast_integrated2.rds")
+DefaultAssay(pbmc)<-"RNA"
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+addition=read.table("Ast_Metadata2_addition_cell_type_highres.txt",header=TRUE,row.names=1,sep="\t")
+pbmc=AddMetaData(pbmc,addition)
+Idents(pbmc)<-"cell_type_high_resolution"
+
+reference=pbmc
+reference <- FindVariableFeatures(reference, selection.method = "vst", nfeatures = 2000)
+reference <- ScaleData(reference)
+reference <- RunPCA(reference)
+
+pbmc <- readRDS(file = "Ast_integrated_batch_5000_leiden.rds")
+DefaultAssay(pbmc)<-"RNA"
+
+anchors <- FindTransferAnchors(
+  reference = reference,
+  query = pbmc,
+  normalization.method = "LogNormalize",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+
+pbmc <- TransferData(
+  anchorset = anchors,
+  reference = reference,
+  query = pbmc,
+  refdata = list(
+    celltype = "cell_type_high_resolution")
+)
+
+saveRDS(pbmc,file="Ast_integrated_batch_5000_leiden_predicted.rds")
+
+########################################################################################
+library(Seurat)
+pbmc <- readRDS(file = "Ast_integrated_batch_5000_leiden_predicted.rds")
+DimPlot(pbmc)
+write.csv(pbmc@meta.data,file="Ast_integrated_batch_5000_leiden_predicted_metadata")
+addition=read.table("Ast_integrated_batch_5000_leiden_predicted_metadata_addition_scanpy.txt",header=TRUE,row.names=1,sep="\t")
+pbmc=AddMetaData(pbmc,addition)
+Idents(pbmc)<-"cell_type_high_resolution"
+saveRDS(pbmc,file="Ast_integrated_batch_5000_leiden_predicted_final.rds")

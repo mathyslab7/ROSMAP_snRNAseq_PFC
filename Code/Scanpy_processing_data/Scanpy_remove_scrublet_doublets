@@ -1,0 +1,14 @@
+#Add QC info and remove low quality cells
+python
+import numpy as np
+import pandas as pd
+import scanpy as sc
+from anndata import read_h5ad
+adata =read_h5ad('./PFC_Results_res004.h5ad')
+anno = pd.read_csv('./PFC_raw_anno',header=0,index_col=1)
+adata.obs['scrublet_doublet']=anno['scrublet_doublet']
+sc.pl.umap(adata,color=['scrublet_doublet'],palette=sc.pl.palettes.default_20,save='_PFC_Results_res004_doublets.pdf')
+adata_clean = adata[adata.obs["scrublet_doublet"] == "False", :]
+adata_new=sc.AnnData(X=adata_clean.raw.X, obs=adata_clean.obs, var=adata_clean.raw.var)
+adata_new.obsm['X_umap']=adata_clean.obsm['X_umap']
+adata_new.write('./PFC_raw_anno_clean_umap.h5ad')

@@ -1,0 +1,39 @@
+library(Seurat)
+library(SeuratDisk)
+library(ggplot2)
+library(patchwork)
+pbmc <- readRDS(file = "In_integrated_batch_3000_module_scores_predicted_final.rds")
+DimPlot(pbmc)
+DefaultAssay(pbmc)<-"RNA"
+pbmc2=readRDS("SeuratObject_AllenData.rds")
+pbmc2 <- NormalizeData(pbmc2, normalization.method = "LogNormalize", scale.factor = 10000)
+Idents(pbmc2)<-"outlier_call"
+pbmc_filtered=subset(pbmc2, idents = c("True"), invert = TRUE)
+Idents(pbmc_filtered)<-"class_label"
+GABA = subset(pbmc_filtered, idents = c("GABAergic"))
+Idents(GABA)<-"cell_type_alias_label"
+
+reference=GABA
+reference <- FindVariableFeatures(reference, selection.method = "vst", nfeatures = 5000)
+reference <- ScaleData(reference)
+reference <- RunPCA(reference)
+
+anchors <- FindTransferAnchors(
+  reference = reference,
+  query = pbmc,
+  normalization.method = "LogNormalize",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+
+pbmc <- TransferData(
+  anchorset = anchors,
+  reference = reference,
+  query = pbmc,
+  refdata = list(
+    celltype = "cell_type_alias_label")
+)
+
+saveRDS(pbmc,file="In_integrated_batch_3000_module_scores_predicted_final_Allen_predicted.rds")
+data=table(pbmc@meta.data$seurat_clusters,pbmc@meta.data$predicted.celltype)
+write.csv(data,file="Inh_label_transfer_Allen_seurat_clusters")

@@ -1,0 +1,28 @@
+#Scanpy subset major cell classes
+python
+import numpy as np
+import pandas as pd
+import scanpy as sc
+from anndata import read_h5ad
+adata = read_h5ad('./PFC_clean4_Results_res003_orig_umap.h5ad')
+adata_Ex = adata[adata.obs['leiden'].isin(['0','7'])]
+adata_In = adata[adata.obs['leiden'].isin(['2','3'])]
+adata_Ast = adata[adata.obs['leiden'].isin(['4'])]
+adata_Oli = adata[adata.obs['leiden'].isin(['1'])]
+adata_Opc = adata[adata.obs['leiden'].isin(['5'])]
+adata_Immune = adata[adata.obs['leiden'].isin(['6'])]
+adata_Vasc = adata[adata.obs['leiden'].isin(['8'])]
+adata_Ex_raw=sc.AnnData(X=adata_Ex.raw.X, obs=adata_Ex.obs, var=adata_Ex.raw.var)
+adata_In_raw=sc.AnnData(X=adata_In.raw.X, obs=adata_In.obs, var=adata_In.raw.var)
+adata_Ast_raw=sc.AnnData(X=adata_Ast.raw.X, obs=adata_Ast.obs, var=adata_Ast.raw.var)
+adata_Oli_raw=sc.AnnData(X=adata_Oli.raw.X, obs=adata_Oli.obs, var=adata_Oli.raw.var)
+adata_Opc_raw=sc.AnnData(X=adata_Opc.raw.X, obs=adata_Opc.obs, var=adata_Opc.raw.var)
+adata_Immune_raw=sc.AnnData(X=adata_Immune.raw.X, obs=adata_Immune.obs, var=adata_Immune.raw.var)
+adata_Vasc_raw=sc.AnnData(X=adata_Vasc.raw.X, obs=adata_Vasc.obs, var=adata_Vasc.raw.var)
+adata_Ex_raw.write('./Ex_raw.h5ad')
+adata_In_raw.write('./In_raw.h5ad')
+adata_Ast_raw.write('./Ast_raw.h5ad')
+adata_Oli_raw.write('./Oli_raw.h5ad')
+adata_Opc_raw.write('./Opc_raw.h5ad')
+adata_Immune_raw.write('./Immune_raw.h5ad')
+adata_Vasc_raw.write('./Vasc_raw.h5ad')

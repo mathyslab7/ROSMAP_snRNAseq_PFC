@@ -1,0 +1,15 @@
+#Read 10x-Genomics-formatted mtx directory
+python
+import numpy as np
+import pandas as pd
+import scanpy as sc
+from anndata import read_h5ad
+adata = sc.read_10x_mtx('./filtered_feature_bc_matrix/',var_names='gene_symbols',cache=True)
+adata.var['gene_names'] = adata.var_names
+adata.var_names_make_unique()
+adata.raw = adata
+mito_genes = adata.var_names.str.startswith('MT-')
+adata.obs['percent_mito'] = np.sum(adata[:, mito_genes].X, axis=1).A1 / np.sum(adata.X, axis=1).A1
+adata.obs['n_counts'] = adata.X.sum(axis=1).A1
+adata.obs[['percent_mito','n_counts']].to_csv('./n_counts.csv')
+adata.write('Raw_data.h5ad')
